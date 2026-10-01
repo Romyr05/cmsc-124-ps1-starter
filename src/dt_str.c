@@ -46,24 +46,24 @@ dt_str *dt_str_new(const char *bytes, size_t length)
     }
 
     // initialization of new string (with size of struct)
-    dt_str *s = malloc{sizeof(struct dt_str)}
+    dt_str *s = malloc(sizeof(struct dt_str));
     if (s == NULL){
         return NULL;
     }
     
     // making space for bytes if not free it
-    s->bytes = malloc{length+1};
+    s->bytes = malloc(length+1);
     if (s->bytes == NULL){
-        free (s)
+        free (s);
         return NULL;
     }
 
     // Copy to the bytes with that length
-    memcpy(s->bytes, bytes, length)
+    memcpy(s->bytes, bytes, length);
 
 
-    s->length = length
-    s->capacity = length +1 //buffer size +1
+    s->length = length;
+    s->capacity = length +1; //buffer size +1
 
     return s;
 }
@@ -80,7 +80,7 @@ void dt_str_free(dt_str *s)
         free(s->bytes);  // buffer
         free(s);  //handle
     }
-    return
+    return;
 }
 
 /*
@@ -93,7 +93,7 @@ size_t dt_str_len(const dt_str *s)
          dt_str_len(greeting) -> 12
        cases/normal/string_building.case */
 
-    return s->length
+    return s->length;
 
 
 }
