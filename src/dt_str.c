@@ -109,8 +109,8 @@ const char *dt_str_bytes(const dt_str *s)
          dt_str_bytes(s) -> the three bytes 'a', 0, 'b'
          dt_str_len(s)   -> 3, the required read length
        cases/capacity/embedded_zero_byte.case */
-    (void)s;
-    return "";
+
+    return s->bytes;
 }
 
 /*
@@ -127,10 +127,65 @@ dt_status dt_str_append(dt_str *s, const char *bytes, size_t length)
        s holds "hello": dt_str_append(s, ", world", 7) -> DT_OK, len is now 12
        an allocation failure                           -> DT_ERR_CAPACITY, s unchanged
        cases/normal/string_building.case, cases/capacity/string_growth.case */
-    (void)s;
-    (void)bytes;
-    (void)length;
-    return DT_ERR_CAPACITY;
+
+    
+    size_t new_length = s->length;
+
+    // length given > max size
+    if (length > SIZE_MAX - 1 - new_length){
+        return DT_ERR_CAPACITY;
+    }
+
+    // New length 
+    new_length+= length;
+
+
+    size_t new_append_capacity = new_length + 1;
+
+    // capacity still has enough space put it on the empty bytes
+    if (new_append_capacity <=  s-> capacity){
+        memcpy(s->bytes + s->length, bytes, length)
+        s->length = new_length;
+        s->bytes[new_length] = '\0' ;
+    }
+
+    size_t capacity_needed;
+
+
+    //Checking if capacity is possible to doubled
+    if (s->capacity > SIZE_MAX/2){
+        capacity_needed = new_append_capacity;
+        
+    }else{
+        capacity_needed = s->capacity *2;
+
+        // if new length + 1 is still greater 
+        if (capacity_needed < new_append_capacity){
+            capacity_needed = new_append_capacity;
+        }
+    }
+
+
+
+    // New buffer with new length 
+    char *new_buffer = realloc(s->bytes, capacity_needed);
+
+    s->length = realloc(s->length + length) 
+    if (new_buffer == NULL){
+        return DT_ERR_CAPACITY;
+    }
+
+
+    s->bytes = new_buffer;
+    s->capacity = capacity_needed;
+
+    // Copy new bytes after the old data, then update length
+    memcpy(s->bytes + s->length, bytes, length);
+    s->length = new_length;
+    s->bytes[new_length] = '\0' ;
+
+    return DT_OK;
+
 }
 
 /*
