@@ -76,7 +76,11 @@ void dt_str_free(dt_str *s)
     /* TODO: Release the buffer. Then release the handle. Accept NULL.
        dt_str_free(s)     -> the buffer and the handle are both released
        dt_str_free(NULL)  -> returns, having done nothing */
-    (void)s;
+    if (s != NULL){
+        free(s->bytes);  // buffer
+        free(s);  //handle
+    }
+    return
 }
 
 /*
@@ -88,8 +92,10 @@ size_t dt_str_len(const dt_str *s)
        after `str new greeting "hello"` then `str append greeting ", world"`:
          dt_str_len(greeting) -> 12
        cases/normal/string_building.case */
-    (void)s;
-    return 0;
+
+    return s->length
+
+
 }
 
 /*
