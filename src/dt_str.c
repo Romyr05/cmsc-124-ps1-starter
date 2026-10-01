@@ -37,9 +37,35 @@ dt_str *dt_str_new(const char *bytes, size_t length)
        dt_str_new("hello", 5)  -> a string whose dt_str_len is 5
        dt_str_new("a\0b", 3)   -> a string whose dt_str_len remains 3
        cases/normal/string_building.case, cases/capacity/embedded_zero_byte.case */
-    (void)bytes;
-    (void)length;
-    return NULL;
+
+    /*
+    Making new array with new bytes, length and capacity
+    */
+    if (length == SIZE_MAX){
+        return NULL;
+    }
+
+    // initialization of new string (with size of struct)
+    dt_str *s = malloc{sizeof(struct dt_str)}
+    if (s == NULL){
+        return NULL;
+    }
+    
+    // making space for bytes if not free it
+    s->bytes = malloc{length+1};
+    if (s->bytes == NULL){
+        free (s)
+        return NULL;
+    }
+
+    // Copy to the bytes with that length
+    memcpy(s->bytes, bytes, length)
+
+
+    s->length = length
+    s->capacity = length +1 //buffer size +1
+
+    return s;
 }
 
 /*
