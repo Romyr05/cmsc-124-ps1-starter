@@ -23,20 +23,20 @@
 #define bucketSize 16 // same as java's hashmap
 
 
-struct dt_map {
-    struct node *bucket[bucketSize] // create 16 array buckets with each element holds a node struct
-    struct node **order // Ordering for the printing
-    size_t count
-    size_t order_capacity
-
-};
-
 // linked list node (key,value and next)
 struct node {
-    char *key
-    dt_value value
-    struct node *next
-}
+    char *key;
+    dt_value value;
+    struct node *next;
+};
+
+struct dt_map {
+    struct node *bucket[bucketSize] ;// create 16 array buckets with each element holds a node struct
+    struct node **order; // Ordering for the printing
+    size_t count;
+    size_t order_capacity;
+};
+
 
 /*
  * dt_map_new builds an empty map. It returns NULL after an allocation failure.
@@ -47,9 +47,32 @@ dt_map *dt_map_new(void)
        dt_map_new()  -> a map whose dt_map_len is 0
        cases/normal/map_basics.case */
 
-    dt_map()
+    
+    dt_map *new_map = malloc(sizeof(*new_map));
+    if (new_map == NULL){
+        return NULL;
+    }
 
-    return NULL;
+    // Empty the bucket (Null)
+    for(int i = 0; i<bucketSize; i++){
+        new_map->bucket[i] = NULL;
+    }
+
+
+    //allocate size capacity for 4 struct array of pointers
+    new_map->order = malloc(4*sizeof(*new_map->order));
+    if(new_map->order == NULL){
+        free(new_map);    //free map if above did not allocate 
+        return NULL;
+    }
+
+    new_map->order_capacity = 4;
+    new_map->count = 0;
+
+
+    return new_map;
+
+
 }
 
 /*
