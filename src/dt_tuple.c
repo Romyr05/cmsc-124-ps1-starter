@@ -49,11 +49,7 @@ dt_tuple *dt_tuple_new(const dt_value *values, size_t count)
  */
 void dt_tuple_free(dt_tuple *t)
 {
-    /* TODO: Release the tuple. Preserve its values.
-       The environment owns those values. dt_array_free follows the same rule.
-       a tuple holding a string  -> the tuple goes, the string stays
-       dt_tuple_free(NULL)       -> returns, having done nothing */
-    (void)t;
+    free(t);
 }
 
 /*
@@ -61,14 +57,9 @@ void dt_tuple_free(dt_tuple *t)
  */
 size_t dt_tuple_arity(const dt_tuple *t)
 {
-    /* TODO: Return the count that the constructor stored.
-       The count does not change after construction.
-       after `tup new pair 1 "two"`:  dt_tuple_arity(pair) -> 2
-       after `tup new empty`:         dt_tuple_arity(empty) -> 0
-       cases/normal/tuple_basics.case */
-    (void)t;
-    return 0;
+    return t->arity;
 }
+
 
 /*
  * dt_tuple_at writes the value at zero-based position index to *out.
