@@ -20,9 +20,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define bucketSize 16 // same as java's hashmap
+
+
 struct dt_map {
-    int placeholder; /* TODO: Add the buckets and insertion-order data. */
+    struct node *bucket[bucketSize] // create 16 array buckets with each element holds a node struct
+    struct node **order // Ordering for the printing
+    size_t count
+    size_t order_capacity
+
 };
+
+// linked list node (key,value and next)
+struct node {
+    char *key
+    dt_value value
+    struct node *next
+}
 
 /*
  * dt_map_new builds an empty map. It returns NULL after an allocation failure.
@@ -32,6 +46,9 @@ dt_map *dt_map_new(void)
     /* TODO: Return an allocated empty map. Return NULL after an allocation failure.
        dt_map_new()  -> a map whose dt_map_len is 0
        cases/normal/map_basics.case */
+
+    dt_map()
+
     return NULL;
 }
 
