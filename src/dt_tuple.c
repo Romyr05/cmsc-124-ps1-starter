@@ -57,6 +57,7 @@ void dt_tuple_free(dt_tuple *t)
  */
 size_t dt_tuple_arity(const dt_tuple *t)
 {
+    // Return the arity that the constructor stored.
     return t->arity;
 }
 
@@ -66,13 +67,12 @@ size_t dt_tuple_arity(const dt_tuple *t)
  */
 dt_status dt_tuple_at(const dt_tuple *t, size_t index, dt_value *out)
 {
-    /* TODO: DT_ERR_RANGE at or past the arity. Positions start at 0.
-       for the tuple (1, "two"):
-         dt_tuple_at(t, 0, &out)  -> DT_OK, *out is the integer 1
-         dt_tuple_at(t, 2, &out)  -> DT_ERR_RANGE, *out untouched
-       cases/normal/tuple_basics.case, cases/boundary/tuple_index_past_arity.case */
-    (void)t;
-    (void)index;
-    (void)out;
-    return DT_ERR_RANGE;
+    // Valid positions are from 0 up to, but not including, the tuple's arity.
+    if (index >= t->arity) {
+        return DT_ERR_RANGE;
+    }
+
+    // Leave out unchanged when the position is invalid.
+    *out = t->values[index];
+    return DT_OK;
 }
