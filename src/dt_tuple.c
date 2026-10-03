@@ -13,6 +13,7 @@
 #include "dt.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 struct dt_tuple {
     dt_value values[DT_TUPLE_MAX_ARITY];
@@ -26,16 +27,20 @@ struct dt_tuple {
  */
 dt_tuple *dt_tuple_new(const dt_value *values, size_t count)
 {
-    /* TODO: Return NULL when count exceeds DT_TUPLE_MAX_ARITY.
-       Otherwise, copy the values. Accept a zero count.
-       {1, "two"}  -> a tuple of arity 2 that prints as (1, "two")
-       count 0     -> a valid empty tuple that prints as ()
-       count 9     -> NULL, since DT_TUPLE_MAX_ARITY is 8
-       cases/normal/tuple_basics.case, cases/capacity/tuple_max_arity.case,
-       cases/capacity/tuple_over_arity.case */
-    (void)values;
-    (void)count;
-    return NULL;
+    if (count > DT_TUPLE_MAX_ARITY) {
+        return NULL;
+    }
+    // Allocate memory for the tuple structure
+    dt_tuple *t = malloc(sizeof(*t));
+    if (t == NULL) {
+        return NULL;
+    }
+    // Copy the provided values into the tuple's values array
+    if (count > 0) {
+        memcpy(t->values, values, count * sizeof(*values));
+    }
+    t->arity = count;
+    return t;
 }
 
 /*
