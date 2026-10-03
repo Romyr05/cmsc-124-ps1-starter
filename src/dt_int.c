@@ -84,7 +84,6 @@ dt_status dt_int_mul(long long a, long long b, long long *out)
        cases/boundary/int_mul_min_by_negative_one.case */
 
     // perform checks for multiplication overflow
-
     if (a > 0 && b > 0) {
         if (a > LLONG_MAX / b) return DT_ERR_OVERFLOW;
     }
