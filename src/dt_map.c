@@ -86,7 +86,22 @@ void dt_map_free(dt_map *m)
        a map holding a string value  -> the nodes and keys go, the string stays
        dt_map_free(NULL)             -> returns, having done nothing
        cases/cleanup/map_churn.case */
-    (void)m;
+
+    if(m == NULL){
+        return;
+    }
+
+    // Free using the loop
+
+    for (int i = 0; i< m->count; i++){
+        free(m->order[i]->key);  //Only key since preserve value
+        free(m->order[i]);
+    }
+
+    free(m->order);
+    free(m);
+
+    return;
 }
 
 /*
@@ -100,8 +115,8 @@ size_t dt_map_len(const dt_map *m)
        after put beta again:          dt_map_len(m) -> 3, still
        after del alpha:               dt_map_len(m) -> 2
        cases/normal/map_basics.case */
-    (void)m;
-    return 0;
+
+    return m->count;
 }
 
 /*
