@@ -83,7 +83,20 @@ dt_status dt_int_mul(long long a, long long b, long long *out)
        cases/normal/int_arithmetic.case,
        cases/boundary/int_mul_min_by_negative_one.case */
 
+    // retuns DT_OK and sets *out to 0 if either a or b is 0
+    if (a == 0 || b == 0) {
+    *out = 0;
+    return DT_OK;
+    }
+
+ 
     // perform checks for multiplication overflow
+
+    if ((a == LLONG_MIN && b == -1) ||
+        (a == -1 && b == LLONG_MIN)) {
+        return DT_ERR_OVERFLOW;
+    }  
+    
     if (a > 0 && b > 0) {
         if (a > LLONG_MAX / b) return DT_ERR_OVERFLOW;
     }
