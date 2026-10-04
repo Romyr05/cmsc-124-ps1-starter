@@ -146,7 +146,7 @@ dt_status dt_map_put(dt_map *m, const char *key, dt_value v)
        an allocation failure              -> DT_ERR_CAPACITY, map unchanged
        cases/normal/map_basics.case */
        
-    int bucket_index = bucket_size_index(key); //indexes for the buckets
+    size_t bucket_index = bucket_size_index(key); //indexes for the buckets
 
     //Searching inside the bucket
     for(struct node *node_bucket = m->bucket[bucket_index]; node_bucket!= NULL; node_bucket = node_bucket->next  ){
@@ -215,10 +215,16 @@ dt_status dt_map_get(const dt_map *m, const char *key, dt_value *out)
 
     //get the integer thru the 
     
+    size_t bucket_index = bucket_size_index(key);
 
-    (void)m;
-    (void)key;
-    (void)out;
+    //Searching inside the bucket
+    for(struct node *node_bucket = m->bucket[bucket_index]; node_bucket!= NULL; node_bucket = node_bucket->next  ){
+        //if found write value out 
+        if(strcmp(node_bucket->key,key)==0){
+            *out = node_bucket->value;
+            return DT_OK;
+        }
+    }
     return DT_ERR_KEY;
 }
 
