@@ -93,7 +93,7 @@ void dt_map_free(dt_map *m)
 
     // Free using the loop
 
-    for (int i = 0; i< m->count; i++){
+    for (size_t i = 0; i< m->count; i++){
         free(m->order[i]->key);  //Only key since preserve value
         free(m->order[i]);
     }
@@ -135,10 +135,65 @@ dt_status dt_map_put(dt_map *m, const char *key, dt_value v)
        put "beta" -> 22 on that map       -> DT_OK, same position, new value
        an allocation failure              -> DT_ERR_CAPACITY, map unchanged
        cases/normal/map_basics.case */
-    (void)m;
-    (void)key;
-    (void)v;
-    return DT_ERR_CAPACITY;
+       
+    // Hashing
+    unsigned long long h = 14695981039346656037ULL;
+    for (const unsigned char *p = (const unsigned char *)key; *p != '\0'; p++) {
+        h ^= (unsigned long long)*p;
+        h *= 1099511628211ULL;
+    }
+
+    int bucket_index = h % bucketSize; //indexes for the buckets
+
+    //Searching inside the bucket
+    for(struct node *node_bucket = m->bucket[bucket_index]; node_bucket!= NULL; node_bucket = node_bucket->next  ){
+        // matching
+        if(strcmp(node_bucket->key,key)==0){
+            node_bucket->value = v;
+            return DT_OK;
+        }
+    }
+
+    //Making new node 
+    struct node *new_node = malloc(sizeof(*new_node));
+    if(new_node == NULL){
+        return DT_ERR_CAPACITY;
+    }
+
+
+    //Copying the key for inserting
+    new_node->key = malloc(strlen(key) + 1);
+    if(new_node->key == NULL){
+        free(new_node);
+        return DT_ERR_CAPACITY;
+    }
+    memcpy(new_node->key, key, strlen(key) + 1);
+    new_node->value = v;
+
+
+
+    // for capacity
+    if(m->count == m->order_capacity - 1){
+        size_t new_capacity = m->order_capacity * 2;
+        struct node **new_order = realloc(m->order,new_capacity * sizeof(*m->order) );  //pointer to a node
+        // if missing 
+        if (new_order == NULL){
+            free(new_node->key);
+            free(new_node);
+            return DT_ERR_CAPACITY;
+        }
+        m->order = new_order;
+        m->order_capacity = new_capacity;
+
+    }
+
+    
+    new_node->next = m->bucket[bucket_index];   // link to old value
+    m->bucket[bucket_index] = new_node;         // link start to new_node
+    m->order[m->count] = new_node;
+    m->count +=1;
+
+    return DT_OK;
 }
 
 /*
@@ -154,6 +209,10 @@ dt_status dt_map_get(const dt_map *m, const char *key, dt_value *out)
          dt_map_get(m, "beta", &out)   -> DT_OK, *out is the integer 22
          dt_map_get(m, "ghost", &out)  -> DT_ERR_KEY, *out untouched
        cases/normal/map_basics.case, cases/boundary/map_missing_key.case */
+
+    //get the integer thru the 
+    
+
     (void)m;
     (void)key;
     (void)out;
