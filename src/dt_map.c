@@ -37,8 +37,9 @@ struct dt_map {
     size_t order_capacity;
 };
 
-static size_t bucket_of(const char *key)
+static size_t bucket_size_index(const char *key)
 {
+    // Hashing 
     unsigned long long h = 14695981039346656037ULL;
     for (const unsigned char *p = (const unsigned char *)key; *p != '\0'; p++) {
         h ^= (unsigned long long)*p;
@@ -145,14 +146,7 @@ dt_status dt_map_put(dt_map *m, const char *key, dt_value v)
        an allocation failure              -> DT_ERR_CAPACITY, map unchanged
        cases/normal/map_basics.case */
        
-    // Hashing
-    unsigned long long h = 14695981039346656037ULL;
-    for (const unsigned char *p = (const unsigned char *)key; *p != '\0'; p++) {
-        h ^= (unsigned long long)*p;
-        h *= 1099511628211ULL;
-    }
-
-    int bucket_index = h % bucketSize; //indexes for the buckets
+    int bucket_index = bucket_size_index(key); //indexes for the buckets
 
     //Searching inside the bucket
     for(struct node *node_bucket = m->bucket[bucket_index]; node_bucket!= NULL; node_bucket = node_bucket->next  ){
