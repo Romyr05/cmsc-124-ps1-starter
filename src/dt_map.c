@@ -37,6 +37,15 @@ struct dt_map {
     size_t order_capacity;
 };
 
+static size_t bucket_of(const char *key)
+{
+    unsigned long long h = 14695981039346656037ULL;
+    for (const unsigned char *p = (const unsigned char *)key; *p != '\0'; p++) {
+        h ^= (unsigned long long)*p;
+        h *= 1099511628211ULL;
+    }
+    return h % bucketSize;
+}
 
 /*
  * dt_map_new builds an empty map. It returns NULL after an allocation failure.
