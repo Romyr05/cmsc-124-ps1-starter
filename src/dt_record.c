@@ -29,16 +29,34 @@ struct dt_record {
  */
 dt_record *dt_record_new(const char **field_names, size_t field_count)
 {
-    /* TODO: Return NULL for more than DT_RECORD_MAX_FIELDS.
-       Copy each field name. Set each field to dt_value_nil().
-       fields {"name", "age"}       -> a record with two nil fields, in that order
-       eight fields                 -> fine, DT_RECORD_MAX_FIELDS is 8
-       nine fields                  -> NULL, and the driver reports DT_ERR_CAPACITY
-       cases/normal/record_basics.case, cases/capacity/record_max_fields.case,
-       cases/capacity/record_over_fields.case */
-    (void)field_names;
-    (void)field_count;
-    return NULL;
+    // overflow check for field_count exceeding DT_RECORD_MAX_FIELDS
+    if (field_count > DT_RECORD_MAX_FIELDS) {
+        return NULL;
+    }
+
+    // allocate memory for the record structure
+    dt_record *record = malloc(sizeof(*record));
+    if (record == NULL) {
+        return NULL;
+    }
+    // initialize the record structure with nil values and copy field names
+    record->count = 0;
+    for (size_t i = 0; i < field_count; i++) {
+        record->names[i] = malloc(strlen(field_names[i]) + 1);
+        if (record->names[i] == NULL) {
+            for (size_t j = 0; j < i; j++) {
+                free(record->names[j]);
+            }
+            free(record);
+            return NULL;
+        }
+
+        strcpy(record->names[i], field_names[i]);
+        record->values[i] = dt_value_nil();
+        record->count++;
+    }
+
+    return record;
 }
 
 /*
