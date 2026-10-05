@@ -65,10 +65,12 @@ dt_record *dt_record_new(const char **field_names, size_t field_count)
  */
 void dt_record_free(dt_record *r)
 {
-    /* TODO: Release the copied field names. Then release the record.
-       a record holding a string value  -> the names go, the string stays
-       dt_record_free(NULL)             -> returns, having done nothing */
-    (void)r;
+    if (r != NULL) {
+        for (size_t i = 0; i < r->count; i++) {
+            free(r->names[i]);
+        }
+        free(r);
+    }
 }
 
 /*
@@ -76,12 +78,7 @@ void dt_record_free(dt_record *r)
  */
 size_t dt_record_field_count(const dt_record *r)
 {
-    /* TODO: Return the field count that the constructor stored.
-       The count does not change after construction.
-       after `rec new person name age`:  dt_record_field_count(person) -> 2
-       cases/normal/record_basics.case */
-    (void)r;
-    return 0;
+    return r->count;
 }
 
 /*
