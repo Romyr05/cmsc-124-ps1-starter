@@ -318,8 +318,13 @@ dt_status dt_map_key_at(const dt_map *m, size_t index, const char **out)
          dt_map_key_at(m, 3, &out)  -> DT_ERR_RANGE, *out untouched
        cases/normal/map_basics.case */
 
-    (void)m;
-    (void)index;
-    (void)out;
-    return DT_ERR_RANGE;
+       // since 0 index then we >= it
+    if(index >= m->count){
+        return DT_ERR_RANGE;
+    }
+
+    // linking *out variable to the address of this 
+    *out = m->order[index]->key;
+    return DT_OK;
+
 }
