@@ -241,9 +241,67 @@ dt_status dt_map_remove(dt_map *m, const char *key)
          dt_map_remove(m, "ghost")  -> DT_ERR_KEY, nothing changes
        reinserting "alpha" appends it after "gamma"
        cases/normal/map_basics.case, cases/boundary/map_remove_missing_key.case */
-    (void)m;
-    (void)key;
-    return DT_ERR_KEY;
+
+    // similar every key 
+    size_t bucket_index = bucket_size_index(key);
+
+    // have prev node pointer and a node bucket pointer
+    
+    //Checking the prev and next pointer 
+
+    // Error message
+
+    // if pre is null then 
+
+    struct node *prev = NULL; 
+    struct node *n = m-> bucket[bucket_index];   //used for the node of 
+
+    if(n == NULL){
+        return DT_ERR_KEY;
+    }
+
+
+
+    //finding where the key of that word in the bucket
+    while (n!=NULL){
+        if(strcmp(n->key,key)==0){
+            break;
+        }
+        prev = n;
+        n = n->next;
+    }
+
+    // After loop if not found the key
+    if(n == NULL){
+        return DT_ERR_KEY;
+    }
+    
+    if(prev == NULL){
+        m->bucket[bucket_index] = n->next;
+    }else{
+        prev->next = n->next;
+    }
+
+    // Shifting
+
+    int i = 0;
+    // order is the by insertion
+    while(m->order[i] != n){
+        i++;
+    }
+
+    // count -> counted by 1 index 
+    for(size_t j = i; j + 1 < m->count; j++){
+        m->order[j] = m->order[j+1];
+    }
+    
+
+    free(n->key);
+    free(n);
+    m->count -= 1;
+
+    return DT_OK;
+    
 }
 
 /*
@@ -259,6 +317,7 @@ dt_status dt_map_key_at(const dt_map *m, size_t index, const char **out)
          dt_map_key_at(m, 0, &out)  -> DT_OK, *out = "alpha"
          dt_map_key_at(m, 3, &out)  -> DT_ERR_RANGE, *out untouched
        cases/normal/map_basics.case */
+
     (void)m;
     (void)index;
     (void)out;
