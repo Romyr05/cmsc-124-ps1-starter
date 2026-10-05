@@ -88,16 +88,11 @@ size_t dt_record_field_count(const dt_record *r)
  */
 dt_status dt_record_field_name(const dt_record *r, size_t index, const char **out)
 {
-    /* TODO: Return field names in declaration order.
-       Return DT_ERR_RANGE for an invalid position. Preserve *out after this error.
-       after `rec new person name age`:
-         dt_record_field_name(person, 0, &out)  -> DT_OK, *out = "name"
-         dt_record_field_name(person, 2, &out)  -> DT_ERR_RANGE, *out untouched
-       cases/normal/record_basics.case */
-    (void)r;
-    (void)index;
-    (void)out;
-    return DT_ERR_RANGE;
+    if (index >= r->count) {
+        return DT_ERR_RANGE;
+    }
+    *out = r->names[index];
+    return DT_OK;
 }
 
 /*
@@ -106,14 +101,13 @@ dt_status dt_record_field_name(const dt_record *r, size_t index, const char **ou
  */
 dt_status dt_record_get(const dt_record *r, const char *field, dt_value *out)
 {
-    /* TODO: Find the index for field. Return DT_ERR_FIELD when it is absent.
-       after `rec set person age 36`:
-         dt_record_get(person, "age", &out)      -> DT_OK, *out is the integer 36
-         dt_record_get(person, "salary", &out)   -> DT_ERR_FIELD, *out untouched
-       cases/normal/record_basics.case, cases/boundary/record_unknown_field.case */
-    (void)r;
-    (void)field;
-    (void)out;
+    for (size_t i = 0; i < r->count; i++) {
+        if (strcmp(r->names[i], field) == 0) {
+            *out = r->values[i];
+            return DT_OK;
+        }
+    }
+
     return DT_ERR_FIELD;
 }
 
@@ -124,14 +118,12 @@ dt_status dt_record_get(const dt_record *r, const char *field, dt_value *out)
  */
 dt_status dt_record_set(dt_record *r, const char *field, dt_value v)
 {
-    /* TODO: Use the same lookup and then write the value. Never add a field.
-       after `rec new person name age`:
-         dt_record_set(person, "age", dt_value_int(36))     -> DT_OK
-         dt_record_set(person, "salary", dt_value_int(1))   -> DT_ERR_FIELD
-         the record still has only the fields "name" and "age"
-       cases/normal/record_basics.case, cases/boundary/record_unknown_field.case */
-    (void)r;
-    (void)field;
-    (void)v;
+    for (size_t i = 0; i < r->count; i++) {
+        if (strcmp(r->names[i], field) == 0) {
+            r->values[i] = v;
+            return DT_OK;
+        }
+    }
+
     return DT_ERR_FIELD;
 }
