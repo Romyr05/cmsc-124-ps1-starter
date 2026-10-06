@@ -128,6 +128,25 @@ long long dt_array_lower_bound(const dt_array *a)
 }
 
 /*
+ * array_offset validates index and writes its storage offset to *offset.
+ * It returns DT_ERR_RANGE for an index outside the bounds.
+ */
+static dt_status array_offset(const dt_array *a, long long index, size_t *offset)
+{
+    if (index < a->lower_bound) {
+        return DT_ERR_RANGE;
+    }
+    /* index >= lower_bound, so this unsigned difference is the true distance. */
+    unsigned long long distance =
+        (unsigned long long)index - (unsigned long long)a->lower_bound;
+    if (distance >= a->length) {
+        return DT_ERR_RANGE;
+    }
+    *offset = (size_t)distance;
+    return DT_OK;
+}
+
+/*
  * dt_array_get writes the element at index to *out.
  * It returns DT_ERR_RANGE and does not change *out for an invalid index.
  */
@@ -145,10 +164,13 @@ dt_status dt_array_get(const dt_array *a, long long index, dt_value *out)
        cases/boundary/array_index_above_upper.case,
        cases/boundary/array_index_below_lower.case,
        cases/boundary/array_full_range_index.case */
-    (void)a;
-    (void)index;
-    (void)out;
-    return DT_ERR_RANGE;
+    size_t offset;
+    dt_status st = array_offset(a, index, &offset);
+    if (st != DT_OK) {
+        return st;
+    }
+    *out = a->elements[offset];
+    return DT_OK;
 }
 
 /*
