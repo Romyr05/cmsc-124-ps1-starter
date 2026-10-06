@@ -43,9 +43,43 @@ dt_array *dt_array_new(size_t length, long long lower_bound)
        dt_array_new(0, 0)   -> an empty array
        cases/normal/array_basics.case, cases/boundary/array_empty.case,
        cases/boundary/array_negative_lower_bound.case */
-    (void)length;
-    (void)lower_bound;
-    return NULL;
+
+    /* Reject a nonempty range whose final index exceeds long long.
+       Unsigned subtraction avoids overflow because lower_bound <= LLONG_MAX. */
+    if (length > 0) {
+        unsigned long long headroom =
+            (unsigned long long)LLONG_MAX - (unsigned long long)lower_bound;
+        if ((unsigned long long)(length - 1) > headroom) {
+            return NULL;
+        }
+    }
+
+    /* Reject an element block that would overflow size_t. */
+    if (length > SIZE_MAX / sizeof(dt_value)) {
+        return NULL;
+    }
+
+    dt_array *a = malloc(sizeof(*a));
+    if (a == NULL) {
+        return NULL;
+    }
+
+    a->elements = NULL;
+    if (length > 0) {
+        a->elements = malloc(length * sizeof(dt_value));
+        if (a->elements == NULL) {
+            free(a);
+            return NULL;
+        }
+    }
+
+    for (size_t i = 0; i < length; i++) {
+        a->elements[i] = dt_value_nil();
+    }
+
+    a->length = length;
+    a->lower_bound = lower_bound;
+    return a;
 }
 
 /*
