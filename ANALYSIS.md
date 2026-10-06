@@ -1,7 +1,5 @@
 # Joint Analysis
 
-Write these answers together. Use examples from your implementation and explain the tradeoffs in your own words.
-
 ## 1. Data type tradeoffs
 
 ### Dict in Python
