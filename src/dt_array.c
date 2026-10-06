@@ -109,8 +109,7 @@ size_t dt_array_len(const dt_array *a)
        after `arr new a 3 -1`:  dt_array_len(a) -> 3, the same three elements
        after `arr new a 0 0`:   dt_array_len(a) -> 0
        cases/normal/array_basics.case, cases/boundary/array_empty.case */
-    (void)a;
-    return 0;
+    return a->length;
 }
 
 /*
