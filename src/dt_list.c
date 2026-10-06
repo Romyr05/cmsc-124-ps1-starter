@@ -85,8 +85,11 @@ size_t dt_list_len(const dt_list *l)
        for a = (1 2 3):  dt_list_len(a) -> 3
        for the empty list: dt_list_len(NULL) -> 0
        cases/normal/list_basics.case */
-    (void)l;
-    return 0;
+    size_t count = 0;
+    for (const dt_list *cell = l; cell != NULL; cell = cell->tail) {
+        count++;
+    }
+    return count;
 }
 
 /*
