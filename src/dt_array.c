@@ -186,8 +186,11 @@ dt_status dt_array_set(dt_array *a, long long index, dt_value v)
          dt_array_set(a, -1, dt_value_int(10))  -> DT_OK, offset 0 holds 10
          dt_array_set(a,  2, dt_value_int(10))  -> DT_ERR_RANGE, nothing changes
        cases/normal/array_basics.case, cases/boundary/array_negative_lower_bound.case */
-    (void)a;
-    (void)index;
-    (void)v;
-    return DT_ERR_RANGE;
+    size_t offset;
+    dt_status st = array_offset(a, index, &offset);
+    if (st != DT_OK) {
+        return st;
+    }
+    a->elements[offset] = v;
+    return DT_OK;
 }
