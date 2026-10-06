@@ -20,9 +20,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct dt_map {
-    int placeholder; /* TODO: Add the buckets and insertion-order data. */
+#define bucketSize 16 // same as java's hashmap
+
+
+// linked list node (key,value and next)
+struct node {
+    char *key;
+    dt_value value;
+    struct node *next;
 };
+
+struct dt_map {
+    struct node *bucket[bucketSize] ;// create 16 array buckets with each element holds a node struct
+    struct node **order; // Ordering for the printing
+    size_t count;
+    size_t order_capacity;
+};
+
+static size_t bucket_size_index(const char *key)
+{
+    // Hashing 
+    unsigned long long h = 14695981039346656037ULL;
+    for (const unsigned char *p = (const unsigned char *)key; *p != '\0'; p++) {
+        h ^= (unsigned long long)*p;
+        h *= 1099511628211ULL;
+    }
+    return h % bucketSize;
+}
 
 /*
  * dt_map_new builds an empty map. It returns NULL after an allocation failure.
@@ -32,7 +56,33 @@ dt_map *dt_map_new(void)
     /* TODO: Return an allocated empty map. Return NULL after an allocation failure.
        dt_map_new()  -> a map whose dt_map_len is 0
        cases/normal/map_basics.case */
-    return NULL;
+
+    
+    dt_map *new_map = malloc(sizeof(*new_map));
+    if (new_map == NULL){
+        return NULL;
+    }
+
+    // Empty the bucket (Null)
+    for(int i = 0; i<bucketSize; i++){
+        new_map->bucket[i] = NULL;
+    }
+
+
+    //allocate size capacity for 4 struct array of pointers
+    new_map->order = malloc(4*sizeof(*new_map->order));
+    if(new_map->order == NULL){
+        free(new_map);    //free map if above did not allocate 
+        return NULL;
+    }
+
+    new_map->order_capacity = 4;
+    new_map->count = 0;
+
+
+    return new_map;
+
+
 }
 
 /*
@@ -46,7 +96,22 @@ void dt_map_free(dt_map *m)
        a map holding a string value  -> the nodes and keys go, the string stays
        dt_map_free(NULL)             -> returns, having done nothing
        cases/cleanup/map_churn.case */
-    (void)m;
+
+    if(m == NULL){
+        return;
+    }
+
+    // Free using the loop
+
+    for (size_t i = 0; i< m->count; i++){
+        free(m->order[i]->key);  //Only key since preserve value
+        free(m->order[i]);
+    }
+
+    free(m->order);
+    free(m);
+
+    return;
 }
 
 /*
@@ -60,8 +125,8 @@ size_t dt_map_len(const dt_map *m)
        after put beta again:          dt_map_len(m) -> 3, still
        after del alpha:               dt_map_len(m) -> 2
        cases/normal/map_basics.case */
-    (void)m;
-    return 0;
+
+    return m->count;
 }
 
 /*
@@ -80,10 +145,58 @@ dt_status dt_map_put(dt_map *m, const char *key, dt_value v)
        put "beta" -> 22 on that map       -> DT_OK, same position, new value
        an allocation failure              -> DT_ERR_CAPACITY, map unchanged
        cases/normal/map_basics.case */
-    (void)m;
-    (void)key;
-    (void)v;
-    return DT_ERR_CAPACITY;
+       
+    size_t bucket_index = bucket_size_index(key); //indexes for the buckets
+
+    //Searching inside the bucket
+    for(struct node *node_bucket = m->bucket[bucket_index]; node_bucket!= NULL; node_bucket = node_bucket->next  ){
+        // matching
+        if(strcmp(node_bucket->key,key)==0){
+            node_bucket->value = v;
+            return DT_OK;
+        }
+    }
+
+    //Making new node 
+    struct node *new_node = malloc(sizeof(*new_node));
+    if(new_node == NULL){
+        return DT_ERR_CAPACITY;
+    }
+
+
+    //Copying the key for inserting
+    new_node->key = malloc(strlen(key) + 1);
+    if(new_node->key == NULL){
+        free(new_node);
+        return DT_ERR_CAPACITY;
+    }
+    memcpy(new_node->key, key, strlen(key) + 1);
+    new_node->value = v;
+
+
+
+    // for capacity
+    if(m->count == m->order_capacity - 1){
+        size_t new_capacity = m->order_capacity * 2;
+        struct node **new_order = realloc(m->order,new_capacity * sizeof(*m->order) );  //pointer to a node
+        // if missing 
+        if (new_order == NULL){
+            free(new_node->key);
+            free(new_node);
+            return DT_ERR_CAPACITY;
+        }
+        m->order = new_order;
+        m->order_capacity = new_capacity;
+
+    }
+
+    
+    new_node->next = m->bucket[bucket_index];   // link to old value
+    m->bucket[bucket_index] = new_node;         // link start to new_node
+    m->order[m->count] = new_node;
+    m->count +=1;
+
+    return DT_OK;
 }
 
 /*
@@ -99,9 +212,19 @@ dt_status dt_map_get(const dt_map *m, const char *key, dt_value *out)
          dt_map_get(m, "beta", &out)   -> DT_OK, *out is the integer 22
          dt_map_get(m, "ghost", &out)  -> DT_ERR_KEY, *out untouched
        cases/normal/map_basics.case, cases/boundary/map_missing_key.case */
-    (void)m;
-    (void)key;
-    (void)out;
+
+    //get the integer thru the 
+    
+    size_t bucket_index = bucket_size_index(key);
+
+    //Searching inside the bucket
+    for(struct node *node_bucket = m->bucket[bucket_index]; node_bucket!= NULL; node_bucket = node_bucket->next  ){
+        //if found write value out 
+        if(strcmp(node_bucket->key,key)==0){
+            *out = node_bucket->value;
+            return DT_OK;
+        }
+    }
     return DT_ERR_KEY;
 }
 
@@ -118,9 +241,67 @@ dt_status dt_map_remove(dt_map *m, const char *key)
          dt_map_remove(m, "ghost")  -> DT_ERR_KEY, nothing changes
        reinserting "alpha" appends it after "gamma"
        cases/normal/map_basics.case, cases/boundary/map_remove_missing_key.case */
-    (void)m;
-    (void)key;
-    return DT_ERR_KEY;
+
+    // similar every key 
+    size_t bucket_index = bucket_size_index(key);
+
+    // have prev node pointer and a node bucket pointer
+    
+    //Checking the prev and next pointer 
+
+    // Error message
+
+    // if pre is null then 
+
+    struct node *prev = NULL; 
+    struct node *n = m-> bucket[bucket_index];   //used for the node of 
+
+    if(n == NULL){
+        return DT_ERR_KEY;
+    }
+
+
+
+    //finding where the key of that word in the bucket
+    while (n!=NULL){
+        if(strcmp(n->key,key)==0){
+            break;
+        }
+        prev = n;
+        n = n->next;
+    }
+
+    // After loop if not found the key
+    if(n == NULL){
+        return DT_ERR_KEY;
+    }
+    
+    if(prev == NULL){
+        m->bucket[bucket_index] = n->next;
+    }else{
+        prev->next = n->next;
+    }
+
+    // Shifting
+
+    int i = 0;
+    // order is the by insertion
+    while(m->order[i] != n){
+        i++;
+    }
+
+    // count -> counted by 1 index 
+    for(size_t j = i; j + 1 < m->count; j++){
+        m->order[j] = m->order[j+1];
+    }
+    
+
+    free(n->key);
+    free(n);
+    m->count -= 1;
+
+    return DT_OK;
+    
 }
 
 /*
@@ -136,8 +317,14 @@ dt_status dt_map_key_at(const dt_map *m, size_t index, const char **out)
          dt_map_key_at(m, 0, &out)  -> DT_OK, *out = "alpha"
          dt_map_key_at(m, 3, &out)  -> DT_ERR_RANGE, *out untouched
        cases/normal/map_basics.case */
-    (void)m;
-    (void)index;
-    (void)out;
-    return DT_ERR_RANGE;
+
+       // since 0 index then we >= it
+    if(index >= m->count){
+        return DT_ERR_RANGE;
+    }
+
+    // linking *out variable to the address of this 
+    *out = m->order[index]->key;
+    return DT_OK;
+
 }
